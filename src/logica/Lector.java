@@ -18,10 +18,19 @@ import java.util.logging.Logger;
  */
 public class Lector extends Thread{
 
-    private String port, name;
-    private SerialPort sp;
+    private final String port;
+    private final String name;
+    private final SerialPort sp;
     private String sTemp, sHum;
-    private String dbName = "granja";
+    private final String dbName = "granja";
+    //Limites temperatura
+    private int limInf1 = 20;
+    private int limSup1 = 45;
+    //Limites humedad
+    private int limInf2 = 30;
+    private int limSup2 = 80;
+    private boolean alarma = false;
+    
 
     public Lector(String port, String name) {
         this.name = name;
@@ -44,31 +53,37 @@ public class Lector extends Thread{
         while (true) {
             
             if(this.sp.openPort()) {
-                System.out.println("El puerto "+ this.port +" está abierto");
+                //System.out.println("El puerto "+ this.port +" está abierto");
                 if(this.sp.bytesAvailable() > 0) {
                     //lector del Arduino
                     BufferedReader br = new BufferedReader (new InputStreamReader(sp.getInputStream()));
                     try {
                         sTemp = br.readLine();
-                        //System.out.println("sensor Temperatura: "+sTemp);   //sensor Temperatura
-                    
-
+                        
                         sHum = br.readLine();
-                        //System.out.println("Sensor Humedad: "+sHum);   //sensor Humedad
-
-                        //String datos[] = {this.name, sTemp, sHum};
-
+                        
                         BasicDBObject doc=new BasicDBObject();
 
                         long id=System.nanoTime(); 
-                        doc.append("_id", id);
+                        doc.append("_id", this.name+id);
                         doc.append("lector",this.name);
                         doc.append("sTemp",sTemp);
                         doc.append("sHum",sHum);
 
                         DBCollection coll=getConexion().getCollection(dbName);
                         coll.insert(doc);
-
+                        
+                        
+                        int aux1 = Integer.parseInt(sTemp);
+                        int aux2 = Integer.parseInt(sHum);
+                        
+                        //Si la medición sobrepasa los limites, se activa la alarma
+                        if((aux1<limInf1 || aux1>limSup1) || (aux2<limInf2 || aux2 > limSup2)) {
+                            this.alarma = true;
+                        }
+                        else {
+                            this.alarma = false;
+                        }
                         
                         } catch (IOException ex) {
                         Logger.getLogger(Lector.class.getName()).log(Level.SEVERE, null, ex);
@@ -87,5 +102,9 @@ public class Lector extends Thread{
             }
         }
     }
-       
+
+    public boolean isAlarma() {
+        return alarma;
+    }
+
 }
