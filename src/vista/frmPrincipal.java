@@ -2,6 +2,8 @@ package vista;
 
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.FindIterable;
 import java.awt.Color;
 import java.net.UnknownHostException;
 import java.util.logging.Level;
@@ -10,6 +12,7 @@ import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
 import logica.Lector;
 import logica.ManejadorDB;
+import org.bson.Document;
 
 /**
  *
@@ -30,6 +33,14 @@ public class frmPrincipal extends javax.swing.JFrame {
         btnG2.setBackground(Color.green);
         btnG3.setBackground(Color.green);
         btnG4.setBackground(Color.green);
+        
+//        try {
+//            getProm();
+////        getDesv();
+//        } catch (UnknownHostException ex) {
+//            Logger.getLogger(frmPrincipal.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+        
         
     }
 
@@ -78,15 +89,14 @@ public class frmPrincipal extends javax.swing.JFrame {
         
         String row[] = new String[3];
         
-        DBCursor datos = man.getHistorico(cmbxGranjas.getSelectedItem().toString(), cmbxSensores.getSelectedItem().toString());
+        FindIterable <Document> datos = man.getHistorico(cmbxGranjas.getSelectedItem().toString(), cmbxSensores.getSelectedItem().toString());
         
         if ("Temperatura".equals(cmbxSensores.getSelectedItem().toString())) {
-            while (datos.hasNext()) { 
-            DBObject obj=datos.next();
+            for (Document obj : datos) { 
             
             row[0] = (String) obj.get("_id"); 
             row[1] = (String) obj.get("lector"); 
-            row[2] = (String) obj.get("sTemp"); 
+            row[2] = obj.get("sTemp").toString(); 
             
             
             model.addRow(row);
@@ -94,16 +104,34 @@ public class frmPrincipal extends javax.swing.JFrame {
             
          }
          else if("Humedad".equals(cmbxSensores.getSelectedItem().toString())) {
-            while (datos.hasNext()) { 
-            DBObject obj=datos.next();
+            for (Document obj : datos) { 
+            
             row[0] = (String) obj.get("_id"); 
             row[1] = (String) obj.get("lector"); 
-            row[2] = (String) obj.get("sHum");
+            row[2] = obj.get("sHum").toString(); 
+            
             
             model.addRow(row);
             }
         
          }
+        
+    }
+    
+    public void getProm() throws UnknownHostException {
+        AggregateIterable<Document> datos = man.getProm();
+        StringBuilder sb = new StringBuilder();
+        for (Document dbObject : datos) {
+                        sb.append(""
+                        + dbObject.getString("_id") + " - Promedio Temperatura: "+dbObject.getDouble("promTemp")+"\n"
+                        + dbObject.getString("_id") + " - Promedio Humedad: "+dbObject.getDouble("promHum")+"\n\n");
+                
+            }
+        txtaPromedio.setText(sb.toString());
+
+    }
+    
+    public void getDesv() {
         
     }
     
@@ -120,7 +148,6 @@ public class frmPrincipal extends javax.swing.JFrame {
         btnG3 = new javax.swing.JButton();
         btnG4 = new javax.swing.JButton();
         btnIniciar = new javax.swing.JButton();
-        btnListar = new javax.swing.JButton();
         btnDropDB = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         jPanel6 = new javax.swing.JPanel();
@@ -132,7 +159,15 @@ public class frmPrincipal extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         tblHistorico = new javax.swing.JTable();
         jPanel3 = new javax.swing.JPanel();
+        jPanel7 = new javax.swing.JPanel();
+        jLabel4 = new javax.swing.JLabel();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        txtaPromedio = new javax.swing.JTextArea();
+        btnObtenerProm = new javax.swing.JToggleButton();
+        jPanel8 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        txtaDesv = new javax.swing.JTextArea();
         jPanel4 = new javax.swing.JPanel();
         jPanel5 = new javax.swing.JPanel();
 
@@ -162,13 +197,6 @@ public class frmPrincipal extends javax.swing.JFrame {
             }
         });
 
-        btnListar.setText("Listar");
-        btnListar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnListarActionPerformed(evt);
-            }
-        });
-
         btnDropDB.setText("Reiniciar BD");
         btnDropDB.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -193,9 +221,7 @@ public class frmPrincipal extends javax.swing.JFrame {
                         .addComponent(btnG4, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(btnIniciar)
-                        .addGap(18, 18, 18)
-                        .addComponent(btnListar)
-                        .addGap(18, 18, 18)
+                        .addGap(95, 95, 95)
                         .addComponent(btnDropDB)
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
@@ -207,14 +233,13 @@ public class frmPrincipal extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnG1, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnG2, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 22, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnG3, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnG4, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnIniciar)
-                    .addComponent(btnListar)
                     .addComponent(btnDropDB))
                 .addContainerGap())
         );
@@ -226,7 +251,7 @@ public class frmPrincipal extends javax.swing.JFrame {
             .addGroup(panelMapaLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(407, Short.MAX_VALUE))
+                .addContainerGap(446, Short.MAX_VALUE))
         );
         panelMapaLayout.setVerticalGroup(
             panelMapaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -236,7 +261,7 @@ public class frmPrincipal extends javax.swing.JFrame {
                 .addGap(60, 60, 60))
         );
 
-        jTabbedPane1.addTab("Mapa", panelMapa);
+        jTabbedPane1.addTab("Mapa Granja", panelMapa);
 
         jLabel1.setText("Sensor:");
 
@@ -249,7 +274,7 @@ public class frmPrincipal extends javax.swing.JFrame {
 
         cmbxSensores.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Temperatura", "Humedad" }));
 
-        jLabel3.setText("Granja:");
+        jLabel3.setText("Tarjeta:");
 
         cmbxGranjas.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "lector1", "lector2", "lector3", "lector4" }));
 
@@ -308,7 +333,7 @@ public class frmPrincipal extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 432, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 471, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -323,45 +348,120 @@ public class frmPrincipal extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("Histórico por sensor", jPanel2);
 
-        jLabel2.setText("la desviación estándar de los valores almacenados en una tarjeta y entre todas las tarjetas");
+        jLabel4.setText("PROMEDIO");
+
+        txtaPromedio.setEditable(false);
+        txtaPromedio.setColumns(20);
+        txtaPromedio.setRows(5);
+        txtaPromedio.setText("Tarjeta 1 - Temperatura: \nTarjeta 1 - Humedad:\n\nTarjeta 2 - Temperatura: \nTarjeta 2 - Humedad:\n\nTarjeta 3 - Temperatura: \nTarjeta 3 - Humedad:\n\nTarjeta 4 - Temperatura: \nTarjeta 4 - Humedad:\n");
+        jScrollPane3.setViewportView(txtaPromedio);
+
+        btnObtenerProm.setText("Obtener");
+        btnObtenerProm.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnObtenerPromActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
+        jPanel7.setLayout(jPanel7Layout);
+        jPanel7Layout.setHorizontalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel7Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 391, Short.MAX_VALUE)
+                    .addGroup(jPanel7Layout.createSequentialGroup()
+                        .addComponent(jLabel4)
+                        .addGap(75, 75, 75)
+                        .addComponent(btnObtenerProm)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+        jPanel7Layout.setVerticalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel7Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel4)
+                    .addComponent(btnObtenerProm))
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane3)
+                .addContainerGap())
+        );
+
+        jLabel2.setText("Desviación estándar");
+
+        txtaDesv.setEditable(false);
+        txtaDesv.setColumns(20);
+        txtaDesv.setRows(5);
+        txtaDesv.setText("Tarjeta 1:\n\nTarjeta 2:\n\nTarjeta 3:\n\nTarjeta 4:\n\nTodas:");
+        jScrollPane4.setViewportView(txtaDesv);
+
+        javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
+        jPanel8.setLayout(jPanel8Layout);
+        jPanel8Layout.setHorizontalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 286, Short.MAX_VALUE)
+                    .addGroup(jPanel8Layout.createSequentialGroup()
+                        .addComponent(jLabel2)
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
+        );
+        jPanel8Layout.setVerticalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel2)
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 251, Short.MAX_VALUE)
+                .addContainerGap())
+        );
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGap(105, 105, 105)
-                .addComponent(jLabel2)
-                .addContainerGap(173, Short.MAX_VALUE))
+                .addContainerGap()
+                .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGap(123, 123, 123)
-                .addComponent(jLabel2)
-                .addContainerGap(219, Short.MAX_VALUE))
+                .addContainerGap()
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(40, Short.MAX_VALUE))
         );
 
-        jTabbedPane1.addTab("Temperatura y humedad por granja", jPanel3);
+        jTabbedPane1.addTab("Promedio y desviación estándar", jPanel3);
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 716, Short.MAX_VALUE)
+            .addGap(0, 755, Short.MAX_VALUE)
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 356, Short.MAX_VALUE)
         );
 
-        jTabbedPane1.addTab("Gráficas histórico por granja", jPanel4);
+        jTabbedPane1.addTab("Gráficas histórico por tarjeta", jPanel4);
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 716, Short.MAX_VALUE)
+            .addGap(0, 755, Short.MAX_VALUE)
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -410,14 +510,6 @@ public class frmPrincipal extends javax.swing.JFrame {
         new Alarma().execute();
     }//GEN-LAST:event_btnIniciarActionPerformed
 
-    private void btnListarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnListarActionPerformed
-        try {
-            man.getHistorico(cmbxGranjas.getSelectedItem().toString(), cmbxSensores.getSelectedItem().toString());
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(frmPrincipal.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_btnListarActionPerformed
-
     private void btnDropDBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDropDBActionPerformed
         try {
             man.borrarBD();
@@ -437,6 +529,14 @@ public class frmPrincipal extends javax.swing.JFrame {
             Logger.getLogger(frmPrincipal.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_btnListarHistoricoActionPerformed
+
+    private void btnObtenerPromActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnObtenerPromActionPerformed
+        try {
+            getProm();
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(frmPrincipal.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_btnObtenerPromActionPerformed
 
     /**
      * @param args the command line arguments
@@ -480,23 +580,30 @@ public class frmPrincipal extends javax.swing.JFrame {
     private javax.swing.JButton btnG3;
     private javax.swing.JButton btnG4;
     private javax.swing.JButton btnIniciar;
-    private javax.swing.JButton btnListar;
     private javax.swing.JButton btnListarHistorico;
+    private javax.swing.JToggleButton btnObtenerProm;
     private javax.swing.JComboBox<String> cmbxGranjas;
     private javax.swing.JComboBox<String> cmbxSensores;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
+    private javax.swing.JPanel jPanel8;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JPanel panelMapa;
     private javax.swing.JPanel panelPrincipal;
     private javax.swing.JTable tblHistorico;
+    private javax.swing.JTextArea txtaDesv;
+    private javax.swing.JTextArea txtaPromedio;
     // End of variables declaration//GEN-END:variables
 }
